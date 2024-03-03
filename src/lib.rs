@@ -18,6 +18,20 @@ pub enum Error {
     ReadFailed(i32),
 }
 
+pub enum Eoi {
+    None,
+    AssertOnSend,
+}
+
+impl From<Eoi> for i32 {
+    fn from(value: Eoi) -> Self {
+        match value {
+            Eoi::None => 0,
+            Eoi::AssertOnSend => 1,
+        }
+    }
+}
+
 pub struct Device {
     descriptor: i32,
 }
@@ -28,13 +42,13 @@ impl Device {
         pad: i32,
         sad: i32,
         timo: i32,
-        send_eoi: i32,
+        send_eoi: Eoi,
         eosmode: i32,
     ) -> Result<Self, Error> {
         let descriptor;
 
         unsafe {
-            descriptor = ibdev(board_index, pad, sad, timo, send_eoi, eosmode);
+            descriptor = ibdev(board_index, pad, sad, timo, send_eoi.into(), eosmode);
         }
 
         if descriptor == -1 {
@@ -101,9 +115,24 @@ mod tests {
 
     #[test]
     fn set_dcv_hp3457() {
-        let device = Device::new(0, 22, 0, 10, 1, 0).unwrap();
-        let status = device.write(b"DCV");
+        let device = Device::new(
+            0,
+            22,
+            0,
+            20,
+            Eoi::AssertOnSend,
+            eos_flags_REOS as i32 | '\n' as i32,
+        )
+        .unwrap();
 
+        let status = device.write(b"ID?");
         assert!(status.is_ok());
+
+        let mut data: [u8; 20] = [0; 20];
+
+        match device.read(&mut data) {
+            Ok(len) => println!("{} => {:?}", len, String::from_utf8(data.to_vec())),
+            Err(e) => println!("{:?}", e),
+        }
     }
 }
