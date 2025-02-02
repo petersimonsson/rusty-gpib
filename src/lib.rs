@@ -18,6 +18,7 @@ pub enum Error {
     ReadFailed(i32),
 }
 
+#[derive(Debug)]
 pub enum EoSMode {
     None,
     REOS(char),
