@@ -20,7 +20,6 @@ pub enum Error {
 
 #[derive(Debug, Clone)]
 pub enum EoSMode {
-    None,
     REOS(char),
     XEOS(char),
     BIN(u8),
@@ -32,7 +31,6 @@ impl Into<i32> for EoSMode {
             EoSMode::REOS(c) => eos_flags_REOS as i32 | c as i32,
             EoSMode::XEOS(c) => eos_flags_XEOS as i32 | c as i32,
             EoSMode::BIN(d) => eos_flags_BIN as i32 | d as i32,
-            EoSMode::None => 0,
         }
     }
 }
@@ -48,14 +46,19 @@ impl Device {
         sad: Option<i32>,
         timo: i32,
         send_eoi: bool,
-        eosmode: EoSMode,
+        eosmode: Option<EoSMode>,
     ) -> Result<Self, Error> {
         let descriptor;
 
         let sad = if let Some(s) = sad { s + 0x60 } else { 0 };
+        let eosmode = if let Some(mode) = eosmode {
+            mode.into()
+        } else {
+            0
+        };
 
         unsafe {
-            descriptor = ibdev(board_index, pad, sad, timo, send_eoi.into(), eosmode.into());
+            descriptor = ibdev(board_index, pad, sad, timo, send_eoi.into(), eosmode);
         }
 
         if descriptor == -1 {
@@ -122,7 +125,7 @@ mod tests {
 
     #[test]
     fn set_dcv_hp3457() {
-        let device = Device::new(0, 22, None, 20, true, EoSMode::REOS('\n')).unwrap();
+        let device = Device::new(0, 22, None, 20, true, Some(EoSMode::REOS('\n'))).unwrap();
 
         let status = device.write(b"ID?");
         assert!(status.is_ok());
