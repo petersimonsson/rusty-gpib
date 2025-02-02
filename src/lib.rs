@@ -40,12 +40,14 @@ impl Device {
     pub fn new(
         board_index: i32,
         pad: i32,
-        sad: i32,
+        sad: Option<i32>,
         timo: i32,
         send_eoi: Eoi,
         eosmode: i32,
     ) -> Result<Self, Error> {
         let descriptor;
+
+        let sad = if let Some(s) = sad { s + 0x60 } else { 0 };
 
         unsafe {
             descriptor = ibdev(board_index, pad, sad, timo, send_eoi.into(), eosmode);
@@ -118,7 +120,7 @@ mod tests {
         let device = Device::new(
             0,
             22,
-            0,
+            None,
             20,
             Eoi::AssertOnSend,
             eos_flags_REOS as i32 | '\n' as i32,
