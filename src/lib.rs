@@ -4,6 +4,7 @@
 
 use std::ffi::c_void;
 
+use bitflags::bitflags;
 use thiserror::Error;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
@@ -18,20 +19,28 @@ pub enum Error {
     ReadFailed(i32),
 }
 
-#[derive(Debug, Clone)]
-pub enum EoSMode {
-    REOS(char),
-    XEOS(char),
-    BIN(u8),
+bitflags! {
+    pub struct EoSModeFlags: i32 {
+        const REOS = eos_flags_REOS as i32;
+        const XEOS = eos_flags_XEOS as i32;
+        const BIN = eos_flags_BIN as i32;
+    }
 }
 
-impl Into<i32> for EoSMode {
+pub struct EoS {
+    flags: EoSModeFlags,
+    character: u8,
+}
+
+impl EoS {
+    pub fn new(flags: EoSModeFlags, character: u8) -> Self {
+        EoS { flags, character }
+    }
+}
+
+impl Into<i32> for EoS {
     fn into(self) -> i32 {
-        match self {
-            EoSMode::REOS(c) => eos_flags_REOS as i32 | c as i32,
-            EoSMode::XEOS(c) => eos_flags_XEOS as i32 | c as i32,
-            EoSMode::BIN(d) => eos_flags_BIN as i32 | d as i32,
-        }
+        self.flags.bits() as i32 | self.character as i32
     }
 }
 
@@ -46,7 +55,7 @@ impl Device {
         sad: Option<i32>,
         timo: i32,
         send_eoi: bool,
-        eosmode: Option<EoSMode>,
+        eosmode: Option<EoS>,
     ) -> Result<Self, Error> {
         let descriptor;
 
@@ -125,7 +134,15 @@ mod tests {
 
     #[test]
     fn id_hp3457() {
-        let device = Device::new(0, 22, None, 20, true, Some(EoSMode::REOS('\n'))).unwrap();
+        let device = Device::new(
+            0,
+            22,
+            None,
+            20,
+            true,
+            Some(EoS::new(EoSModeFlags::REOS, b'\n')),
+        )
+        .unwrap();
 
         let status = device.write(b"ID?");
         assert!(status.is_ok());
