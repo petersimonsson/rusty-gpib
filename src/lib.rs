@@ -124,7 +124,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set_dcv_hp3457() {
+    fn id_hp3457() {
         let device = Device::new(0, 22, None, 20, true, Some(EoSMode::REOS('\n'))).unwrap();
 
         let status = device.write(b"ID?");
