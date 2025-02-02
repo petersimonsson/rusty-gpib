@@ -36,6 +36,22 @@ impl EoS {
     pub fn new(flags: EoSModeFlags, character: u8) -> Self {
         EoS { flags, character }
     }
+
+    pub fn new_alt(reos: bool, xeos: bool, bin: bool, character: u8) -> Self {
+        let mut flags: EoSModeFlags = EoSModeFlags::empty();
+
+        if reos {
+            flags |= EoSModeFlags::REOS;
+        }
+        if xeos {
+            flags |= EoSModeFlags::XEOS;
+        }
+        if bin {
+            flags |= EoSModeFlags::BIN;
+        }
+
+        EoS { flags, character }
+    }
 }
 
 impl Into<i32> for EoS {
