@@ -18,20 +18,6 @@ pub enum Error {
     ReadFailed(i32),
 }
 
-pub enum Eoi {
-    None,
-    AssertOnSend,
-}
-
-impl From<Eoi> for i32 {
-    fn from(value: Eoi) -> Self {
-        match value {
-            Eoi::None => 0,
-            Eoi::AssertOnSend => 1,
-        }
-    }
-}
-
 pub struct Device {
     descriptor: i32,
 }
@@ -42,7 +28,7 @@ impl Device {
         pad: i32,
         sad: Option<i32>,
         timo: i32,
-        send_eoi: Eoi,
+        send_eoi: bool,
         eosmode: i32,
     ) -> Result<Self, Error> {
         let descriptor;
@@ -117,15 +103,8 @@ mod tests {
 
     #[test]
     fn set_dcv_hp3457() {
-        let device = Device::new(
-            0,
-            22,
-            None,
-            20,
-            Eoi::AssertOnSend,
-            eos_flags_REOS as i32 | '\n' as i32,
-        )
-        .unwrap();
+        let device =
+            Device::new(0, 22, None, 20, true, eos_flags_REOS as i32 | '\n' as i32).unwrap();
 
         let status = device.write(b"ID?");
         assert!(status.is_ok());
