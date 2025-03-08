@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bitflags = "2.8.0"
-bytes = "1.9"
+bitflags = "2.9.0"
+bytes = "1.10"
 thiserror = "2.0"
 
 [build-dependencies]
